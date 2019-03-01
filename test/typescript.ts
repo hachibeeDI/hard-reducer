@@ -24,8 +24,8 @@ const thunked = createThunkAction(
 );
 
 const thunked2 = createThunkAction<
-  { value: number },
   any,
+  { value: number },
   any,
   { ret: boolean }
 >("thunked2", async (input, dispatch, getState) => {
@@ -55,7 +55,7 @@ inc(1); //=> { type: 'counter/inc', payload: 1 }
 
 const asyncWithNoArgs = createAsyncAction(
   "async-noargs",
-  async (_val: void) => {
+  async () => {
     return [1, 2, 3];
   }
 );
