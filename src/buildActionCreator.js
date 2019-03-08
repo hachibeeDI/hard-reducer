@@ -82,7 +82,9 @@ export default function buildActionCreator(opts: { prefix?: string } = {}) {
         })
         .catch(err => {
           dispatch({
-            type: rejected
+            type: rejected,
+            payload: error,
+            error: true
           });
           return Promise.reject(err);
         });
