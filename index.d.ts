@@ -7,24 +7,29 @@ export type Action<Payload> = {
 
 // Action Creator
 
-type CallableNoArg<Ret> = {(): Ret;}
-type CallableWithArg<Ret = void, Input = void> = {(input: Input): Ret;}
-export type Callable<Ret, Input> = Input extends void ? CallableNoArg<Ret> :
-  Input extends never ? CallableNoArg<Ret>:
-  CallableWithArg<Ret, Input>
+// In some case i.e. type inference drops the type like `undefined | void | null | never` into `{}`
+type InvalidArg = keyof {};
 
-export type ActionCreator<Payload = void, Input = void> = {
+type ActionWorkerArgument<T = undefined> = T extends undefined
+  ? []
+  : keyof T extends InvalidArg
+  ? []
+  : [T];
+
+export type Callable<Ret, Input = undefined> = {(...arg: ActionWorkerArgument<Input>): Ret};
+
+export type ActionCreator<Payload = void, Input = undefined> = {
   type: string;
 } & Callable<Action<Payload>, Input>;
 
 
-export type AsyncActionCreator<Payload, Input = void> = {
+export type AsyncActionCreator<Payload, Input = undefined> = {
   started: ActionCreator<void, Input>;
   resolved: ActionCreator<Payload, Input>;
   rejected: ActionCreator<Error, Input>;
 } & Callable<Promise<Payload>, Input>;
 
-export type ThunkActionCreator<Payload, Input = void> = {
+export type ThunkActionCreator<Payload, Input> = {
   started: ActionCreator<void, Input>;
   resolved: ActionCreator<Payload, Input>;
   rejected: ActionCreator<Error, Input>;
@@ -51,13 +56,13 @@ export const buildActionCreator: (opt?: {
   prefix?: string;
 }) => {
   createAction<Payload = void, Input = Payload>(t?: string | void): ActionCreator<Payload, Input>;
-  createAction<Payload = void>(t: string, fn: () => Payload): ActionCreator<Payload, void>;
+  createAction<Payload = void>(t: string, fn: () => Payload): ActionCreator<Payload>;
   createAction<Payload, Input = Payload>(t: string, fn: (input: Input) => Payload): ActionCreator<Payload, Input>;
 
-  createAsyncAction<Payload, Input>(
+  createAsyncAction<Payload>(
     t: string | void,
     fn: () => Promise<Payload>
-  ): AsyncActionCreator<Payload, void>;
+  ): AsyncActionCreator<Payload>;
   createAsyncAction<Payload, Input>(
     t: string | void,
     fn: (input: Input) => Promise<Payload>
